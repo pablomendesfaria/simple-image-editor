@@ -1,26 +1,17 @@
 """
 Importa a biblioteca PIL usada para a manipulação da imagem
 """
-from PIL import ImageFilter
+from PIL import (Image, ImageFilter)
 
 
-class Blur:
+def apply_filter(parent, pixels, size):
     """
-    Classe que ia receber o caminho da imagem da classe MainWindow e ira fazer a transformação e retornar
-    a imagem modificada para a MainWindow
-    :param parent: é a instancia da MainWindow
-    :param image: é o caminho da imagem que esta aberta na aplicação
+    Aplica o filtro Blur na imagem usando a biblioteca PIL e retorna os pixels da imagem para a classe MainWindow
+    :param parent: uma instancia da classe MainWindow
+    :param pixels: os pixels da imagem que tera o seguinte filtro aplicado
+    :param size: tamanho da imagem que recebera o filtro
     """
-    def __init__(self, parent, image):
-        super(Blur, self).__init__()
-        self.main_window = parent
-        self.img = image
-        self.pixels = list(self.img.getdata())
-        self.apply_filter()
-
-    def apply_filter(self):
-        """
-        Aplica o filtro Blur na imagem usando a biblioteca PIL e a retorna para a classe MainWindow
-        """
-        self.img = self.img.filter(ImageFilter.BLUR)
-        self.main_window.set_image(self.img)
+    img = Image.new('RGBA', size, (255, 255, 255))
+    img.putdata(pixels)
+    img2 = img.filter(ImageFilter.BLUR)
+    parent.set_image(list(img2.getdata()))

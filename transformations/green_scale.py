@@ -1,15 +1,14 @@
 """
-Negative Filter
+Green Scale Filter
 """
 
 
 def apply_filter(parent, pixels):
     """
-    Transforma a imagem em negativa substituindo os valores RGB pela subtração deles no valor 255
-    retorna a imagem modificada para a classe MainWindow
+    Transforma a imagem colorida em escala de verde, zerando os valores de vermelho e azul e deixando apenas o verde
     :param parent: uma instancia da classe MainWindow
     :param pixels: os pixels da imagem que tera o seguinte filtro aplicado
     """
     for index, pixel in enumerate(pixels):
-        pixels[index] = (255 - pixel[0], 255 - pixel[1], 255 - pixel[2])
+        pixels[index] = (0, pixel[1], 0)
     parent.set_image(pixels)

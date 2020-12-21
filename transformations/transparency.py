@@ -1,17 +1,15 @@
-import sys
-from PIL import Image
+"""
+Transparency
+"""
 
 
-def apply_filter():
-    img = Image.open(sys.argv[1])
-    img_png = img.convert('RGBA')
-    pixels = list(img_png.getdata())
+def apply_filter(parent, pixels, value):
+    """
+    Aplica transparencia a uma imagem de acordo com um valor de porcentagem recebido
+    :param parent: uma instancia da classe MainWindow
+    :param pixels: os pixels da imagem que tera o seguinte filtro aplicado
+    :param value: valor obtido de uma determinada porcentagem sobre 255
+    """
     for index, pixel in enumerate(pixels):
-        pixels[index] = (pixel[0], pixel[1], pixel[2], int(sys.argv[3]))
-    img_output = Image.new('RGBA', img.size)
-    img_output.putdata(pixels)
-    img_output.save(sys.argv[2])
-
-
-if __name__ == '__main__':
-    apply_filter()
+        pixels[index] = (pixel[0], pixel[1], pixel[2], value)
+    parent.set_image(pixels)

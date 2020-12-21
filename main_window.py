@@ -7,10 +7,12 @@ from PIL.ImageQt import ImageQt
 from PyQt5 import uic
 from PyQt5.QtCore import (QObject, Qt, QDir)
 from PyQt5.QtGui import (QPixmap)
-from PyQt5.QtWidgets import (QDialog, QLabel, QMainWindow, QAction, QSlider, QPushButton, QFileDialog,
-                             QApplication)
-
-from transformations import black_and_white
+from PyQt5.QtWidgets import (QDialog, QLabel, QMainWindow, QAction, QSlider, QDoubleSpinBox, QSpinBox, QPushButton,
+                             QFileDialog, QApplication, QInputDialog)
+from transformations import (black_and_white, blur, countor, detail, edge_enhance_normal, edge_enhance_more, emboss,
+                             find_edge_weak, find_edge_medium, find_edge_strong, flip_horizontally, flip_vertically,
+                             gray_scale, hide_message, identify_message, negative, rotate_270, red_scale,
+                             green_scale, blue_scale, sharpen, smooth_normal, smooth_more, transparency, gamma)
 
 
 class AboutAppDialog(QDialog):
@@ -18,7 +20,6 @@ class AboutAppDialog(QDialog):
     Classe que representa o dialogo para mostrar as informações sobre o app
     Carrega o arquivo .ui que contem a interface grafica
     """
-
     def __init__(self):
         super(AboutAppDialog, self).__init__()
         uic.loadUi('about_app_dialog.ui', self)
@@ -35,7 +36,6 @@ class AboutImageDialog(QDialog):
     :param width: é a largura da imagem
     :param height: é a altura da imagem
     """
-
     def __init__(self, name, type, comment, width, height):
         super(AboutImageDialog, self).__init__()
         uic.loadUi('about_image_dialog.ui', self)
@@ -59,7 +59,6 @@ class SecretDialog(QDialog):
     :param self: é a propria janela de dialogo
     :param message: é a mensagem secreta
     """
-
     def __init__(self, message):
         super(SecretDialog, self).__init__()
         uic.loadUi('secret_dialog.ui', self)
@@ -72,7 +71,6 @@ class MainWindow(QMainWindow):
     Classe que representa a janela principal da aplicação
     Carrega um arquivo .ui que contem toda a interface principal
     """
-
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi('main_window.ui', self)
@@ -88,6 +86,7 @@ class MainWindow(QMainWindow):
         self.action_negative = self.findChild(QAction, 'actionNegative')
         self.action_blur = self.findChild(QAction, 'actionBlur')
         self.action_countor = self.findChild(QAction, 'actionCountor')
+        self.action_detail = self.findChild(QAction, 'actionDetail')
         self.action_e_e_normal = self.findChild(QAction, 'actionE_E_Normal')
         self.action_e_e_more = self.findChild(QAction, 'actionE_E_More')
         self.action_emboss = self.findChild(QAction, 'actionEmboss')
@@ -97,6 +96,9 @@ class MainWindow(QMainWindow):
         self.action_sharpen = self.findChild(QAction, 'actionSharpen')
         self.action_s_normal = self.findChild(QAction, 'actionS_Normal')
         self.action_s_more = self.findChild(QAction, 'actionS_More')
+        self.action_red_scale = self.findChild(QAction, 'actionRed_Scale')
+        self.action_green_scale = self.findChild(QAction, 'actionGreen_Scale')
+        self.action_blue_scale = self.findChild(QAction, 'actionBlue_Scale')
 
         self.action_hide_text = self.findChild(QAction, 'actionHide_Text')
         self.action_identify_secret_text = self.findChild(QAction, 'actionIdentify_Secret_Text')
@@ -109,6 +111,9 @@ class MainWindow(QMainWindow):
 
         self.gamma_slider = self.findChild(QSlider, 'gammaSlider')
         self.transparency_slider = self.findChild(QSlider, 'transpaSlider')
+
+        self.gamma_spin = self.findChild(QDoubleSpinBox, 'gammaSpin')
+        self.transparency_spin = self.findChild(QSpinBox, 'transpaSpin')
 
         self.btn_rotate = self.findChild(QPushButton, 'btnRotate')
         self.btn_flip_h = self.findChild(QPushButton, 'btnFlipH')
@@ -124,7 +129,7 @@ class MainWindow(QMainWindow):
 
         self.img_path = ' '
         self.image = None
-        self.image_back_up = None
+        self.image_back_up = []
         self.pixels = []
         self.setup_status_bar()
         self.setup_ui()
@@ -146,10 +151,43 @@ class MainWindow(QMainWindow):
         self.action_save_as.triggered.connect(self.save_as)
         self.action_exit.triggered.connect(sys.exit)
 
-        self.action_black_and_white.triggered.connect(lambda: black_and_white.apply_filter(self, self.pixels))
         self.action_about_app.triggered.connect(about_app_dialog)
         self.action_about_image.triggered.connect(self.about_image_dialog)
-        self.action_identify_secret_text.triggered.connect()
+
+        self.action_black_and_white.triggered.connect(lambda: black_and_white.apply_filter(self, self.pixels))
+        self.action_gray_scale.triggered.connect(lambda: gray_scale.apply_filter(self, self.pixels))
+        self.action_negative.triggered.connect(lambda: negative.apply_filter(self, self.pixels))
+        self.action_blur.triggered.connect(lambda: blur.apply_filter(self, self.pixels, self.image.size))
+        self.action_countor.triggered.connect(lambda: countor.apply_filter(self, self.pixels, self.image.size))
+        self.action_detail.triggered.connect(lambda: detail.apply_filter(self, self.pixels, self.image.size))
+        self.action_e_e_normal.triggered.connect(lambda: edge_enhance_normal.apply_filter(self, self.pixels,
+                                                                                          self.image.size))
+        self.action_e_e_more.triggered.connect(lambda: edge_enhance_more.apply_filter(self, self.pixels,
+                                                                                      self.image.size))
+        self.action_emboss.triggered.connect(lambda: emboss.apply_filter(self, self.pixels, self.image.size))
+        self.action_f_e_weak_detection.triggered.connect(lambda: find_edge_weak.apply_filter(self, self.pixels,
+                                                                                             self.image.size))
+        self.action_f_e_medium_detection.triggered.connect(lambda: find_edge_medium.apply_filter(self, self.pixels,
+                                                                                                 self.image.size))
+        self.action_f_e_strong_detection.triggered.connect(lambda: find_edge_strong.apply_filter(self, self.pixels,
+                                                                                                 self.image.size))
+        self.action_sharpen.triggered.connect(lambda: sharpen.apply_filter(self, self.pixels, self.image.size))
+        self.action_s_normal.triggered.connect(lambda: smooth_normal.apply_filter(self, self.pixels, self.image.size))
+        self.action_s_more.triggered.connect(lambda: smooth_more.apply_filter(self, self.pixels, self.image.size))
+        self.action_red_scale.triggered.connect(lambda: red_scale.apply_filter(self, self.pixels))
+        self.action_green_scale.triggered.connect(lambda: green_scale.apply_filter(self, self.pixels))
+        self.action_blue_scale.triggered.connect(lambda: blue_scale.apply_filter(self, self.pixels))
+
+        self.action_hide_text.triggered.connect(self.hide_text_dialog)
+        self.action_identify_secret_text.triggered.connect(lambda: identify_message.find_message(self.pixels))
+
+        self.btn_rotate.clicked.connect(lambda: rotate_270.rotate(self, self.pixels, self.image.size))
+        self.btn_flip_h.clicked.connect(lambda: flip_horizontally.flip(self, self.pixels, self.image.size))
+        self.btn_flip_v.clicked.connect(lambda: flip_vertically.flip(self, self.pixels, self.image.size))
+        self.btn_reset.clicked.connect(self.reset)
+
+        self.gamma_slider.valueChanged[int].connect(self.gamma_correction)
+        self.transparency_slider.valueChanged[int].connect(self.change_tansparency)
 
     def open_file(self):
         """
@@ -180,10 +218,11 @@ class MainWindow(QMainWindow):
                                                                                      'Images (*.png)', 'Images '
                                                                                                        '(*.png')
         self.img_path = path
+        self.image.save(self.img_path)
+        self.set_up_image()
         self.file_name.setText(f'   Name: {self.get_image_name()}   ')
         self.file_path.setText(f'   Path: {self.img_path}   ')
         self.save_status.setText('   Save Status: Saved   ')
-        self.image.save(self.img_path)
         self.action_save.setEnabled(True)
 
     def about_image_dialog(self):
@@ -197,31 +236,12 @@ class MainWindow(QMainWindow):
         image_dialog = AboutImageDialog(name[0], type, comment, str(width), str(height))
         image_dialog.exec_()
 
-    def get_image_name(self):
-        """
-        Pega o nome da imagem na string que contrem o caminho completa e o retorna
-        :return: retorna o nome da imagem
-        """
-        name = self.img_path.split('/')[-1]
-        name = name.split('.')
-        return name[0]
-
-    def set_image(self, pixels):
-        """
-        Atualiza a imagem e o label que mostra a imagem toda vez que ela for modificada
-        :param pixels: é a imagem modificada recebida de alguma classe que aplica alguma transformação
-        """
-        self.pixels = pixels.copy()
-        self.image.putdata(self.pixels)
-        q_image = ImageQt(self.image)
-        self.image_label.setPixmap(QPixmap.fromImage(q_image).scaled(720, 720, Qt.KeepAspectRatio))
-        self.save_status.setText('   Save Status: Not Saved*   ')
-
     def set_enable_disable(self):
         """
         Apos uma imagem ser aberta os componentes que estavam desabilitados seram ativados e outros que estavam ativados
         desabilitados
         """
+        self.action_save.setEnabled(False)
         self.action_save_as.setEnabled(True)
 
         self.action_black_and_white.setEnabled(True)
@@ -229,6 +249,7 @@ class MainWindow(QMainWindow):
         self.action_negative.setEnabled(True)
         self.action_blur.setEnabled(True)
         self.action_countor.setEnabled(True)
+        self.action_detail.setEnabled(True)
         self.action_e_e_normal.setEnabled(True)
         self.action_e_e_more.setEnabled(True)
         self.action_emboss.setEnabled(True)
@@ -238,6 +259,9 @@ class MainWindow(QMainWindow):
         self.action_sharpen.setEnabled(True)
         self.action_s_normal.setEnabled(True)
         self.action_s_more.setEnabled(True)
+        self.action_red_scale.setEnabled(True)
+        self.action_green_scale.setEnabled(True)
+        self.action_blue_scale.setEnabled(True)
 
         self.action_hide_text.setEnabled(True)
         self.action_identify_secret_text.setEnabled(True)
@@ -256,17 +280,91 @@ class MainWindow(QMainWindow):
         self.btn_reset.setEnabled(True)
 
         img = Image.open(self.img_path)
+        img = img.convert('RGBA')
         self.pixels = list(img.getdata().copy())
-        print(self.pixels[0])
-        print(list(img.getdata()[0]))
         self.image = img.copy()
-        self.image_back_up = img.copy()
-        qimage = ImageQt(self.image)
-        self.image_label.setPixmap(QPixmap.fromImage(qimage).scaled(720, 720, Qt.KeepAspectRatio))
+        self.image_back_up = list(img.getdata().copy())
+        self.verify_rotate_or_square()
 
         self.file_name.setText(f'   Name: {self.get_image_name()}   ')
         self.file_path.setText(f'   Path: {self.img_path}   ')
         self.save_status.setText('   Sava Status: Without Changes   ')
+
+    def get_image_name(self):
+        """
+        Pega o nome da imagem na string que contrem o caminho completa e o retorna
+        :return: retorna o nome da imagem
+        """
+        name = self.img_path.split('/')[-1]
+        name = name.split('.')
+        return name[0]
+
+    def hide_text_dialog(self):
+        """
+        Abre uma caixa de dialogo que pega do usuario a mensagem que ele quer esconder na imagem
+        """
+        text, ok = QInputDialog.getText(self, 'Hide Text', 'Message:')
+        if ok and text:
+            hide_message.apply_transformation(self, self.pixels, text)
+
+    def gamma_correction(self, value):
+        """
+        Faz os devidos calculos com o valor obtido do slider o convertendo para decimal, e então chama o arquivo que faz
+        a correção gamma
+        """
+        value = (value / 10) / 10
+        self.gamma_spin.setValue(value)
+        gamma.correction(self, self.image_back_up, value)
+
+    def change_tansparency(self, value):
+        """
+        Pega o valor do slider e transforma em um inteiro corresponde a porcentagem escolhida, chama o arquivo que faz a
+        transformação
+        """
+        percentage = int((255 * value) / 100)
+        self.transparency_spin.setValue(percentage)
+        transparency.apply_filter(self, self.pixels, percentage)
+
+    def set_image(self, pixels, size=None):
+        """
+        Atualiza a imagem e o label que mostra a imagem toda vez que ela for modificada
+        :param size: tamanho da imagem modificada
+        :param pixels: é a imagem modificada recebida de alguma classe que aplica alguma transformação
+        """
+        self.pixels = pixels.copy()
+        if size is not None:
+            if size[1] > size[0]:
+                self.image = self.image.resize(size)
+            else:
+                self.image = self.image.resize(size)
+        self.image.putdata(self.pixels)
+        self.verify_rotate_or_square()
+        self.save_status.setText('   Save Status: Not Saved*   ')
+        if self.btn_reset.isEnabled():
+            pass
+        else:
+            self.btn_reset.setEnabled(True)
+
+    def reset(self):
+        """
+        Reseta a imagem para o status original e desativa o botão de reset que so sera ativado quando a imagem for
+        modificada
+        """
+        self.pixels = self.image_back_up.copy()
+        self.image.putdata(self.image_back_up)
+        self.verify_rotate_or_square()
+        self.btn_reset.setDisabled(True)
+
+    def verify_rotate_or_square(self):
+        """
+        Verifica se a imagem é quadrada ou se esta rotacionada em 90 ou 270 graus e entaõ define o label de acordo
+        """
+        size = self.image.size
+        q_image = ImageQt(self.image)
+        if size[1] > size[0]:
+            self.image_label.setPixmap(QPixmap.fromImage(q_image).scaled(400, 400, Qt.KeepAspectRatio))
+        else:
+            self.image_label.setPixmap(QPixmap.fromImage(q_image).scaled(720, 720, Qt.KeepAspectRatio))
 
 
 def about_app_dialog():

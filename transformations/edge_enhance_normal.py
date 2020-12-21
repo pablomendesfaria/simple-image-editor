@@ -1,11 +1,18 @@
+"""
+Importa a biblioteca PIL usada para a manipulação da imagem
+"""
 from PIL import (Image, ImageFilter)
 
 
-def apply_filters():
-    img = Image.open('original.png')
-    img = img.filter(ImageFilter.EDGE_ENHANCE)
-    return img
-
-
-if __name__ == '__main__':
-    apply_filters()
+def apply_filter(parent, pixels, size):
+    """
+    Aplica o filtro Edge Enhance na imagem usando a biblioteca PIL e retorna os pixels da imagem para a classe
+    MainWindow
+    :param parent: uma instancia da classe MainWindow
+    :param pixels: os pixels da imagem que tera o seguinte filtro aplicado
+    :param size: tamanho da imagem que recebera o filtro
+    """
+    img = Image.new('RGBA', size, (255, 255, 255))
+    img.putdata(pixels)
+    img2 = img.filter(ImageFilter.EDGE_ENHANCE)
+    parent.set_image(list(img2.getdata()))

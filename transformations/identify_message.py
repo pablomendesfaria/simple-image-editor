@@ -12,18 +12,15 @@ def find_message(pixels):
     """
     message = ''
     for pixel in pixels:
-        if pixel[3] <= 27:
+        if pixel[3] <= 15:
             message += convert_message(pixel[3])
     main_window.secret_message_dialog(message)
 
 
 def convert_message(number):
     """
-    Converte um numero recebido no caractere correspondente e o retorna
+    Converte um numero recebido no hexa equivalente
     :param number: numero a ser convertido em uma letra
-    :return: retorna a chave conrespondente ao numero recebido como parametro
+    :return: retorna o valor correspondente em hexa ao numero recebido
     """
-    conversion_dictionary = {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6, "g": 7, "h": 8, "i": 9, "j": 10,
-                             "k": 11, "l": 12, "m": 13, "n": 14, "o": 15, "p": 16, "q": 17, "r": 18, "s": 19,
-                             "t": 20, "u": 21, "v": 22, "w": 23, "x": 24, "y": 25, "z": 26, " ": 27}
-    return list(conversion_dictionary.keys())[list(conversion_dictionary.values()).index(number)]
+    return format(number, 'x')

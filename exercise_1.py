@@ -98,11 +98,11 @@ class MyWindow(QMainWindow):
                                                      'smooth_image.png'))
         self.action_find_edges.triggered.connect(partial(self.apply_transformation, './find_edge.py',
                                                          'find_edge_image.png'))
-        self.action_shades_of_red.triggered.connect(partial(self.apply_transformation, './shades_of_red.py',
+        self.action_shades_of_red.triggered.connect(partial(self.apply_transformation, './red_scale.py',
                                                             'shades_of_red_image.png'))
-        self.action_shades_of_green.triggered.connect(partial(self.apply_transformation, './shades_of_green.py',
+        self.action_shades_of_green.triggered.connect(partial(self.apply_transformation, './green_scale.py',
                                                               'shades_of_green_image.png'))
-        self.action_shades_of_blue.triggered.connect(partial(self.apply_transformation, './shades_of_blue.py',
+        self.action_shades_of_blue.triggered.connect(partial(self.apply_transformation, './blue_scale.py',
                                                              'shades_of_blue_image.png'))
         self.action_transparency.triggered.connect(self.transparency_dialog)
 
