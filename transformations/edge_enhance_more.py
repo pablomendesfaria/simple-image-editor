@@ -15,4 +15,4 @@ def apply_filter(parent, pixels, size):
     img = Image.new('RGBA', size, (255, 255, 255))
     img.putdata(pixels)
     img2 = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
-    parent.set_image(list(img2.getdata()))
+    parent.set_image(list(img2.getdata()), has_filter=True)

@@ -16,4 +16,4 @@ def apply_filter(parent, pixels, size):
     img = Image.new('RGB', size, (255, 255, 255))
     img.putdata(pixels)
     img2 = img.filter(kernel)
-    parent.set_image(list(img2.getdata()))
+    parent.set_image(list(img2.getdata()), has_filter=True)

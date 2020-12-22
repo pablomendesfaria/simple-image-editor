@@ -377,9 +377,6 @@ QDoubleSpinBox{
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="invertedAppearance">
-          <bool>false</bool>
-         </property>
         </widget>
        </item>
        <item>
@@ -463,6 +460,9 @@ QDoubleSpinBox{
           <number>100</number>
          </property>
          <property name="value">
+          <number>0</number>
+         </property>
+         <property name="sliderPosition">
           <number>0</number>
          </property>
          <property name="orientation">

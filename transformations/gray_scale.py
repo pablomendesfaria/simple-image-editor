@@ -14,4 +14,4 @@ def apply_filter(parent, pixels):
     for index, pixel in enumerate(pixels):
         average = int((0.3*pixel[0] + 0.59*pixel[1] + 0.11*pixel[2]) / 3)
         pixels[index] = (average, average, average)
-    parent.set_image(pixels)
+    parent.set_image(pixels, has_filter=True)

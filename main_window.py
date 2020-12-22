@@ -63,7 +63,20 @@ class SecretDialog(QDialog):
         super(SecretDialog, self).__init__()
         uic.loadUi('secret_dialog.ui', self)
         self.secret_message = self.findChild(QLabel, 'secretLabel')
-        self.secret_message.setText(message)
+        self.decrypt_message = self.findChild(QLabel, 'decryptLabel')
+        self.btn_ok = self.findChild(QPushButton, 'btnOk')
+        self.btn_decrypt = self.findChild(QPushButton, 'btnDecrypt')
+
+        self.message = message
+
+        self.setup_ui()
+
+    def setup_ui(self):
+        """
+        Define as interações da aplicação, o que cada botão faz ao ser clicado e etc.
+        """
+        self.btn_ok.clicked.connect(self.accept)
+        self.secret_message.setText(self.message)
 
 
 class MainWindow(QMainWindow):
@@ -129,8 +142,10 @@ class MainWindow(QMainWindow):
 
         self.img_path = ' '
         self.image = None
-        self.image_back_up = []
+        self.pixels_bkup = []
+        self.transform_bkup = []
         self.pixels = []
+        self.has_filter = False
         self.setup_status_bar()
         self.setup_ui()
 
@@ -283,7 +298,7 @@ class MainWindow(QMainWindow):
         img = img.convert('RGBA')
         self.pixels = list(img.getdata().copy())
         self.image = img.copy()
-        self.image_back_up = list(img.getdata().copy())
+        self.pixels_bkup = list(img.getdata().copy())
         self.verify_rotate_or_square()
 
         self.file_name.setText(f'   Name: {self.get_image_name()}   ')
@@ -314,29 +329,32 @@ class MainWindow(QMainWindow):
         """
         value = (value / 10) / 10
         self.gamma_spin.setValue(value)
-        gamma.correction(self, self.image_back_up, value)
+        pixel = self.transform_bkup.copy() if self.has_filter else self.pixels_bkup.copy()
+        gamma.correction(self, pixel, value)
 
     def change_tansparency(self, value):
         """
         Pega o valor do slider e transforma em um inteiro corresponde a porcentagem escolhida, chama o arquivo que faz a
         transformação
         """
-        percentage = int((255 * value) / 100)
-        self.transparency_spin.setValue(percentage)
-        transparency.apply_filter(self, self.pixels, percentage)
+        percent = int(255 - ((255 * value) / 100))
+        print(percent)
+        self.transparency_spin.setValue(value)
+        transparency.apply_filter(self, self.pixels, percent)
 
-    def set_image(self, pixels, size=None):
+    def set_image(self, pixels, size=None, has_filter=False):
         """
         Atualiza a imagem e o label que mostra a imagem toda vez que ela for modificada
+        :param has_filter: serve unicamente para a aplicação de correção gamma
         :param size: tamanho da imagem modificada
         :param pixels: é a imagem modificada recebida de alguma classe que aplica alguma transformação
         """
         self.pixels = pixels.copy()
+        if has_filter:
+            self.has_filter = has_filter
+            self.transform_bkup = pixels.copy()
         if size is not None:
-            if size[1] > size[0]:
-                self.image = self.image.resize(size)
-            else:
-                self.image = self.image.resize(size)
+            self.image = self.image.resize(size)
         self.image.putdata(self.pixels)
         self.verify_rotate_or_square()
         self.save_status.setText('   Save Status: Not Saved*   ')
@@ -350,9 +368,18 @@ class MainWindow(QMainWindow):
         Reseta a imagem para o status original e desativa o botão de reset que so sera ativado quando a imagem for
         modificada
         """
-        self.pixels = self.image_back_up.copy()
-        self.image.putdata(self.image_back_up)
+        self.pixels = self.pixels_bkup.copy()
+        self.transform_bkup = self.pixels_bkup.copy()
+        size = self.image.size
+        if size[1] > size[0]:
+            self.image = self.image.resize((size[1], size[0]))
+        self.image.putdata(self.pixels_bkup)
         self.verify_rotate_or_square()
+        self.has_filter = False
+        self.gamma_slider.setValue(100)
+        self.gamma_spin.setValue(1)
+        self.transparency_slider.setValue(0)
+        self.transparency_spin.setValue(0)
         self.btn_reset.setDisabled(True)
 
     def verify_rotate_or_square(self):

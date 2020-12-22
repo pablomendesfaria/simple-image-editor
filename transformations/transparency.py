@@ -12,4 +12,4 @@ def apply_filter(parent, pixels, value):
     """
     for index, pixel in enumerate(pixels):
         pixels[index] = (pixel[0], pixel[1], pixel[2], value)
-    parent.set_image(pixels)
+    parent.set_image(pixels, has_filter=True)

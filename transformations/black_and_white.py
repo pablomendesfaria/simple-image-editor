@@ -17,4 +17,4 @@ def apply_filter(parent, pixels):
         pixels[index] = (0 if average < 128 else 255 if average > 128 else 128,
                          0 if average < 128 else 255 if average > 128 else 128,
                          0 if average < 128 else 255 if average > 128 else 128)
-    parent.set_image(pixels)
+    parent.set_image(pixels, has_filter=True)
