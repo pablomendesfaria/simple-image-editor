@@ -12,8 +12,8 @@ from PyQt5.QtWidgets import (QDialog, QLabel, QLineEdit, QMainWindow, QAction, Q
                              QPushButton, QFileDialog, QApplication)
 from transformations import (black_and_white, blur, countor, detail, edge_enhance_normal, edge_enhance_more, emboss,
                              find_edge_weak, find_edge_medium, find_edge_strong, flip_horizontally, flip_vertically,
-                             gray_scale, hide_message, identify_message, negative, rotate_270, red_scale,
-                             green_scale, blue_scale, sharpen, smooth_normal, smooth_more, transparency, gamma)
+                             gray_scale, hide_message, identify_message, negative, rotate_270, red_scale, green_scale,
+                             blue_scale, sharpen, smooth_normal, smooth_more, transparency, gamma, logarithmic)
 
 
 class AboutAppDialog(QDialog):
@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
         self.action_red_scale = self.findChild(QAction, 'actionRed_Scale')
         self.action_green_scale = self.findChild(QAction, 'actionGreen_Scale')
         self.action_blue_scale = self.findChild(QAction, 'actionBlue_Scale')
+        self.action_logarithmic = self.findChild(QAction, 'actionLogarithmic')
 
         self.action_hide_text = self.findChild(QAction, 'actionHide_Text')
         self.action_identify_secret_text = self.findChild(QAction, 'actionIdentify_Secret_Text')
@@ -211,6 +212,7 @@ class MainWindow(QMainWindow):
         self.action_red_scale.triggered.connect(lambda: red_scale.apply_filter(self, self.pixels))
         self.action_green_scale.triggered.connect(lambda: green_scale.apply_filter(self, self.pixels))
         self.action_blue_scale.triggered.connect(lambda: blue_scale.apply_filter(self, self.pixels))
+        self.action_logarithmic.triggered.connect(lambda: logarithmic.log_transform(self, self.pixels))
 
         self.action_hide_text.triggered.connect(self.hide_text_dialog)
         self.action_identify_secret_text.triggered.connect(lambda: identify_message.find_message(self.pixels))

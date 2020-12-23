@@ -698,6 +698,8 @@ QDoubleSpinBox{
     <addaction name="actionRed_Scale"/>
     <addaction name="actionGreen_Scale"/>
     <addaction name="actionBlue_Scale"/>
+    <addaction name="separator"/>
+    <addaction name="actionLogarithmic"/>
    </widget>
    <widget class="QMenu" name="menuSteganography">
     <property name="title">
@@ -939,6 +941,14 @@ QDoubleSpinBox{
    </property>
    <property name="text">
     <string>Blue Scale</string>
+   </property>
+  </action>
+  <action name="actionLogarithmic">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Logarithmic</string>
    </property>
   </action>
  </widget>
