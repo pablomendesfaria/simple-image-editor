@@ -81,6 +81,12 @@ QPushButton:pressed{
 	border: 2px solid #e72258;
 	border-radius: 10px;
 }
+QPushButton:hover#btnOpen{
+	border-style: none;
+}
+QPushButton:pressed#Open{
+	border-style: none;
+}
 QSlider::handle:horizontaly{
 	background-color:  rgb(25, 26, 43);
 	border: 1px solid #191a2b;
@@ -382,7 +388,7 @@ QDoubleSpinBox{
        <item>
         <widget class="QDoubleSpinBox" name="gammaSpin">
          <property name="enabled">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="minimumSize">
           <size>
@@ -478,6 +484,9 @@ QDoubleSpinBox{
        </item>
        <item>
         <widget class="QSpinBox" name="transpaSpin">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="minimumSize">
           <size>
            <width>35</width>
@@ -549,40 +558,6 @@ QDoubleSpinBox{
      </item>
     </layout>
    </widget>
-   <widget class="QLabel" name="openImageLabel">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>60</y>
-      <width>331</width>
-      <height>311</height>
-     </rect>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>331</width>
-      <height>311</height>
-     </size>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="toolTip">
-     <string>Open an Image...</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap>resources/open_image_icon.png</pixmap>
-    </property>
-    <property name="scaledContents">
-     <bool>true</bool>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
    <widget class="QWidget" name="gridWidget" native="true">
     <property name="geometry">
      <rect>
@@ -613,9 +588,6 @@ QDoubleSpinBox{
      </property>
      <item row="0" column="0">
       <widget class="QLabel" name="imageLabel">
-       <property name="toolTip">
-        <string>Open an Image...</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -626,9 +598,44 @@ QDoubleSpinBox{
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="btnOpen">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>60</y>
+      <width>331</width>
+      <height>311</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>331</width>
+      <height>311</height>
+     </size>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="toolTip">
+     <string>Open an Image...</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>resources/open_image_icon.png</normaloff>resources/open_image_icon.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>331</width>
+      <height>311</height>
+     </size>
+    </property>
+   </widget>
    <zorder>gridWidget</zorder>
    <zorder>verticalWidget</zorder>
-   <zorder>openImageLabel</zorder>
+   <zorder>btnOpen</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -2,13 +2,14 @@
 Faz a importação das classes necessarias da biblioteca PyQt5
 """
 import sys
+
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PyQt5 import uic
-from PyQt5.QtCore import (QObject, Qt, QDir)
-from PyQt5.QtGui import (QPixmap)
-from PyQt5.QtWidgets import (QDialog, QLabel, QMainWindow, QAction, QSlider, QDoubleSpinBox, QSpinBox, QPushButton,
-                             QFileDialog, QApplication, QInputDialog)
+from PyQt5.QtCore import (QRegExp, QObject, Qt, QDir)
+from PyQt5.QtGui import (QRegExpValidator, QPixmap)
+from PyQt5.QtWidgets import (QDialog, QLabel, QLineEdit, QMainWindow, QAction, QSlider, QDoubleSpinBox, QSpinBox,
+                             QPushButton, QFileDialog, QApplication)
 from transformations import (black_and_white, blur, countor, detail, edge_enhance_normal, edge_enhance_more, emboss,
                              find_edge_weak, find_edge_medium, find_edge_strong, flip_horizontally, flip_vertically,
                              gray_scale, hide_message, identify_message, negative, rotate_270, red_scale,
@@ -32,23 +33,38 @@ class AboutImageDialog(QDialog):
     width e height com os devidos parametros recebidos da classe MainWindow
     :param name: é o nome do arquivo da imagem
     :param type: é o o tipo de arquivo (extensão) da imagem
-    :param comment: não sei
     :param width: é a largura da imagem
     :param height: é a altura da imagem
     """
-    def __init__(self, name, type, comment, width, height):
+    def __init__(self, name, type, width, height):
         super(AboutImageDialog, self).__init__()
         uic.loadUi('about_image_dialog.ui', self)
         self.name = self.findChild(QLabel, 'nameLabel')
         self.type = self.findChild(QLabel, 'typeLabel')
-        self.comment = self.findChild(QLabel, 'commentLabel')
         self.width = self.findChild(QLabel, 'widthLabel')
         self.height = self.findChild(QLabel, 'heightLabel')
         self.name.setText(name)
         self.type.setText(type)
-        self.comment.setText(comment)
         self.width.setText(width)
         self.height.setText(height)
+
+
+class GetPassDialog(QDialog):
+    """
+    Classe que representa o dialogo para pegar a mensagem (password) que o usuario ira esconder na imagem
+    Carrega o arquivo .ui que contem a interface grafica
+    """
+    def __init__(self):
+        super(GetPassDialog, self).__init__()
+        uic.loadUi('get_password_dialog.ui', self)
+        self.password = self.findChild(QLineEdit, 'passLine')
+        self.password.setValidator(QRegExpValidator(QRegExp('[a-zA-Z@;:<>=?0-9]{0,6}'), self))
+
+    def get_text(self):
+        """
+        Retorna o password que foi digitado pelo usuario
+        """
+        return self.password.text().upper()
 
 
 class SecretDialog(QDialog):
@@ -77,6 +93,8 @@ class SecretDialog(QDialog):
         """
         self.btn_ok.clicked.connect(self.accept)
         self.secret_message.setText(self.message)
+        if not self.message:
+            self.btn_decrypt.setDisabled(True)
 
 
 class MainWindow(QMainWindow):
@@ -119,7 +137,6 @@ class MainWindow(QMainWindow):
         self.action_about_app = self.findChild(QAction, 'actionAbout_App')
         self.action_about_image = self.findChild(QAction, 'actionAbout_Img')
 
-        self.open_image_label = self.findChild(QLabel, 'openImageLabel')
         self.image_label = self.findChild(QLabel, 'imageLabel')
 
         self.gamma_slider = self.findChild(QSlider, 'gammaSlider')
@@ -128,6 +145,7 @@ class MainWindow(QMainWindow):
         self.gamma_spin = self.findChild(QDoubleSpinBox, 'gammaSpin')
         self.transparency_spin = self.findChild(QSpinBox, 'transpaSpin')
 
+        self.btn_open = self.findChild(QPushButton, 'btnOpen')
         self.btn_rotate = self.findChild(QPushButton, 'btnRotate')
         self.btn_flip_h = self.findChild(QPushButton, 'btnFlipH')
         self.btn_flip_v = self.findChild(QPushButton, 'btnFlipV')
@@ -142,6 +160,7 @@ class MainWindow(QMainWindow):
 
         self.img_path = ' '
         self.image = None
+        self.original_format = None
         self.pixels_bkup = []
         self.transform_bkup = []
         self.pixels = []
@@ -153,9 +172,9 @@ class MainWindow(QMainWindow):
         """
         Adiciona os label que contem o nome, local do arquivo e status de salvamento na barra de status
         """
-        self.status_bar.addPermanentWidget(self.file_name)
-        self.status_bar.addPermanentWidget(self.file_path)
-        self.status_bar.addPermanentWidget(self.save_status)
+        self.status_bar.addPermanentWidget(self.file_name, 0)
+        self.status_bar.addPermanentWidget(self.file_path, 0)
+        self.status_bar.addPermanentWidget(self.save_status, 1)
 
     def setup_ui(self):
         """
@@ -196,13 +215,16 @@ class MainWindow(QMainWindow):
         self.action_hide_text.triggered.connect(self.hide_text_dialog)
         self.action_identify_secret_text.triggered.connect(lambda: identify_message.find_message(self.pixels))
 
+        self.btn_open.clicked.connect(self.open_file)
         self.btn_rotate.clicked.connect(lambda: rotate_270.rotate(self, self.pixels, self.image.size))
         self.btn_flip_h.clicked.connect(lambda: flip_horizontally.flip(self, self.pixels, self.image.size))
         self.btn_flip_v.clicked.connect(lambda: flip_vertically.flip(self, self.pixels, self.image.size))
         self.btn_reset.clicked.connect(self.reset)
 
-        self.gamma_slider.valueChanged[int].connect(self.gamma_correction)
-        self.transparency_slider.valueChanged[int].connect(self.change_tansparency)
+        self.gamma_slider.valueChanged[int].connect(self.gamma_spin_update)
+        self.gamma_slider.sliderReleased.connect(self.gamma_correction)
+        self.transparency_slider.valueChanged[int].connect(self.transparency_spin_update)
+        self.transparency_slider.sliderReleased.connect(self.change_tansparency)
 
     def open_file(self):
         """
@@ -215,14 +237,18 @@ class MainWindow(QMainWindow):
                                                                                                               '(*.png'
                                                                                                               '; '
                                                                                                               '*.jpg)')
-        self.img_path = path
-        self.set_enable_disable()
+        if path:
+            self.img_path = path
+            self.set_enable_disable()
+        else:
+            pass
 
     def save(self):
         """
         Salva a imagem no caminho de destino com o mesmo nome, assim sobreescrevendo a antiga
         """
         self.image.save(self.img_path)
+        self.setup_image()
         self.save_status.setText('   Save Status: Saved   ')
 
     def save_as(self):
@@ -232,23 +258,24 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getSaveFileName(self, 'Save File', QDir.currentPath(), 'All Files (*.*);;'
                                                                                      'Images (*.png)', 'Images '
                                                                                                        '(*.png')
-        self.img_path = path
-        self.image.save(self.img_path)
-        self.set_up_image()
-        self.file_name.setText(f'   Name: {self.get_image_name()}   ')
-        self.file_path.setText(f'   Path: {self.img_path}   ')
-        self.save_status.setText('   Save Status: Saved   ')
-        self.action_save.setEnabled(True)
+        if path:
+            self.img_path = path
+            self.image.save(self.img_path)
+            self.setup_image()
+            self.file_name.setText(f'   Name: {self.get_image_name()}   ')
+            self.file_path.setText(f'   Path: {self.img_path}   ')
+            self.save_status.setText('   Save Status: Saved   ')
+            self.action_save.setEnabled(True)
+        else:
+            pass
 
     def about_image_dialog(self):
         """
         Inicia o dialogo que contem as informações da imagem
         """
-        name = self.get_image_name()
         type = self.image.format
-        comment = 'lol'
         width, height = self.image.size
-        image_dialog = AboutImageDialog(name[0], type, comment, str(width), str(height))
+        image_dialog = AboutImageDialog(self.get_image_name(), type, str(width), str(height))
         image_dialog.exec_()
 
     def set_enable_disable(self):
@@ -256,9 +283,6 @@ class MainWindow(QMainWindow):
         Apos uma imagem ser aberta os componentes que estavam desabilitados seram ativados e outros que estavam ativados
         desabilitados
         """
-        self.action_save.setEnabled(False)
-        self.action_save_as.setEnabled(True)
-
         self.action_black_and_white.setEnabled(True)
         self.action_gray_scale.setEnabled(True)
         self.action_negative.setEnabled(True)
@@ -283,27 +307,38 @@ class MainWindow(QMainWindow):
 
         self.action_about_image.setEnabled(True)
 
-        self.open_image_label.setDisabled(True)
-        self.open_image_label.setVisible(False)
-
         self.gamma_slider.setEnabled(True)
         self.transparency_slider.setEnabled(True)
 
+        self.gamma_spin.setEnabled(True)
+        self.transparency_spin.setEnabled(True)
+
+        self.btn_open.setDisabled(True)
+        self.btn_open.setVisible(False)
         self.btn_rotate.setEnabled(True)
         self.btn_flip_h.setEnabled(True)
         self.btn_flip_v.setEnabled(True)
-        self.btn_reset.setEnabled(True)
 
-        img = Image.open(self.img_path)
-        img = img.convert('RGBA')
-        self.pixels = list(img.getdata().copy())
-        self.image = img.copy()
-        self.pixels_bkup = list(img.getdata().copy())
-        self.verify_rotate_or_square()
+        self.setup_image()
 
         self.file_name.setText(f'   Name: {self.get_image_name()}   ')
         self.file_path.setText(f'   Path: {self.img_path}   ')
-        self.save_status.setText('   Sava Status: Without Changes   ')
+        self.save_status.setText('   Save Status: Without Changes   ')
+
+    def setup_image(self):
+        """
+        Configura a imagem a ser trabalhada e o label que ira exibir a imagem, assim como os devidos backups dos pixels
+        e do formato original da imagem
+        Sera usado apos abrir ou salvar uma imagem
+        """
+        img = Image.open(self.img_path)
+        self.original_format = img.format
+        img = img.convert('RGBA')
+        img.format = self.original_format
+        self.pixels = list(img.getdata().copy())
+        self.image = img
+        self.pixels_bkup = list(img.getdata().copy())
+        self.verify_rotate_or_square()
 
     def get_image_name(self):
         """
@@ -318,29 +353,45 @@ class MainWindow(QMainWindow):
         """
         Abre uma caixa de dialogo que pega do usuario a mensagem que ele quer esconder na imagem
         """
-        text, ok = QInputDialog.getText(self, 'Hide Text', 'Message:')
-        if ok and text:
-            hide_message.apply_transformation(self, self.pixels, text)
+        pass_dialog = GetPassDialog()
+        if pass_dialog.exec_():
+            print('clickou ok')
+            text = pass_dialog.get_text()
+            print(text)
+            if text:
+                print('tem texto')
+                hide_message.apply_transformation(self, self.pixels, text)
 
-    def gamma_correction(self, value):
+    def gamma_spin_update(self, value):
+        """
+        Atualiza o valor do spinBox quando o slider for movido
+        :param value: valor atual do slider
+        """
+        self.gamma_spin.setValue(((value / 10) / 10))
+
+    def gamma_correction(self):
         """
         Faz os devidos calculos com o valor obtido do slider o convertendo para decimal, e então chama o arquivo que faz
         a correção gamma
         """
-        value = (value / 10) / 10
-        self.gamma_spin.setValue(value)
+        value = self.gamma_slider.sliderPosition()
         pixel = self.transform_bkup.copy() if self.has_filter else self.pixels_bkup.copy()
-        gamma.correction(self, pixel, value)
+        gamma.correction(self, pixel, ((value / 10) / 10))
 
-    def change_tansparency(self, value):
+    def transparency_spin_update(self, value):
+        """
+        Atualiza o valor do spinBox quando o slider for movido
+        :param value: valor atual do slider
+        """
+        self.transparency_spin.setValue(value)
+
+    def change_tansparency(self):
         """
         Pega o valor do slider e transforma em um inteiro corresponde a porcentagem escolhida, chama o arquivo que faz a
         transformação
         """
-        percent = int(255 - ((255 * value) / 100))
-        print(percent)
-        self.transparency_spin.setValue(value)
-        transparency.apply_filter(self, self.pixels, percent)
+        value = self.transparency_slider.sliderPosition()
+        transparency.apply_filter(self, self.pixels, int(255 - ((255 * value) / 100)))
 
     def set_image(self, pixels, size=None, has_filter=False):
         """
@@ -350,18 +401,22 @@ class MainWindow(QMainWindow):
         :param pixels: é a imagem modificada recebida de alguma classe que aplica alguma transformação
         """
         self.pixels = pixels.copy()
+
         if has_filter:
             self.has_filter = has_filter
             self.transform_bkup = pixels.copy()
+
         if size is not None:
             self.image = self.image.resize(size)
+            self.image.format = self.original_format
+
         self.image.putdata(self.pixels)
         self.verify_rotate_or_square()
+
         self.save_status.setText('   Save Status: Not Saved*   ')
-        if self.btn_reset.isEnabled():
-            pass
-        else:
-            self.btn_reset.setEnabled(True)
+
+        self.action_save_as.setEnabled(True)
+        self.btn_reset.setEnabled(True)
 
     def reset(self):
         """
@@ -370,9 +425,12 @@ class MainWindow(QMainWindow):
         """
         self.pixels = self.pixels_bkup.copy()
         self.transform_bkup = self.pixels_bkup.copy()
+
         size = self.image.size
         if size[1] > size[0]:
             self.image = self.image.resize((size[1], size[0]))
+            self.image.format = self.original_format
+
         self.image.putdata(self.pixels_bkup)
         self.verify_rotate_or_square()
         self.has_filter = False
@@ -380,6 +438,7 @@ class MainWindow(QMainWindow):
         self.gamma_spin.setValue(1)
         self.transparency_slider.setValue(0)
         self.transparency_spin.setValue(0)
+        self.action_save_as.setDisabled(True)
         self.btn_reset.setDisabled(True)
 
     def verify_rotate_or_square(self):
