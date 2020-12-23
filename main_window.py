@@ -6,7 +6,7 @@ import sys
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PyQt5 import uic
-from PyQt5.QtCore import (QRegExp, QObject, Qt, QDir)
+from PyQt5.QtCore import (QRegExp, QProcess, QObject, Qt, QDir)
 from PyQt5.QtGui import (QRegExpValidator, QPixmap)
 from PyQt5.QtWidgets import (QDialog, QLabel, QLineEdit, QMainWindow, QAction, QSlider, QDoubleSpinBox, QSpinBox,
                              QPushButton, QFileDialog, QApplication)
@@ -80,8 +80,12 @@ class SecretDialog(QDialog):
         uic.loadUi('secret_dialog.ui', self)
         self.secret_message = self.findChild(QLabel, 'secretLabel')
         self.decrypt_message = self.findChild(QLabel, 'decryptLabel')
+        self.status = self.findChild(QLabel, 'processStatus')
+        self.label_2 = self.findChild(QLabel, 'label2')
+        self.label_3 = self.findChild(QLabel, 'label3')
         self.btn_ok = self.findChild(QPushButton, 'btnOk')
         self.btn_decrypt = self.findChild(QPushButton, 'btnDecrypt')
+        self.p = None
 
         self.message = message
 
@@ -92,9 +96,64 @@ class SecretDialog(QDialog):
         Define as interações da aplicação, o que cada botão faz ao ser clicado e etc.
         """
         self.btn_ok.clicked.connect(self.accept)
+        self.btn_decrypt.clicked.connect(self.start_decrypt)
         self.secret_message.setText(self.message)
         if not self.message:
             self.btn_decrypt.setDisabled(True)
+
+    def start_decrypt(self):
+        """
+        Inicia o processo de quebrar o sha256, executando um arquivo jar que faz uso de brute force
+        """
+        self.btn_decrypt.setDisabled(True)
+        self.btn_ok.setDisabled(True)
+        self.label_3.setEnabled(True)
+        self.p = QProcess()
+        self.p.readyReadStandardOutput.connect(self.handle_stdout)
+        self.p.readyReadStandardError.connect(self.handle_stderr)
+        self.p.stateChanged.connect(self.handle_state)
+        self.p.finished.connect(self.process_finished)
+        self.p.start("java", ['-jar', 'brute_force.jar', self.message])
+
+    def handle_stderr(self):
+        """
+        Pega a mensagem de saida do .jar e mostra na tela caso a mensagem seja de erro
+        """
+        self.btn_decrypt.setEnabled(True)
+        self.label_2.setEnabled(True)
+        data = self.p.readAllStandardError()
+        stderr = bytes(data).decode("utf8")
+        self.decrypt_message.setText(stderr)
+
+    def handle_stdout(self):
+        """
+        Caso a mensagem seja de sucesso, pega ela e mostra na tela
+        """
+        self.label_2.setEnabled(True)
+        data = self.p.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        self.decrypt_message.setText(stdout)
+
+    def handle_state(self, state):
+        """
+        Atualiza o status do processo em um label
+        :param state: status do processo
+        """
+        states = {
+            QProcess.NotRunning: 'Not running',
+            QProcess.Starting: 'Starting',
+            QProcess.Running: 'Running',
+        }
+        state_name = states[state]
+        self.status.setText(state_name)
+
+    def process_finished(self):
+        """
+        Atualiza o label de status quando o processo terminar
+        """
+        self.btn_ok.setEnabled(True)
+        self.status.setText('Process finished')
+        self.p = None
 
 
 class MainWindow(QMainWindow):
@@ -358,11 +417,8 @@ class MainWindow(QMainWindow):
         """
         pass_dialog = GetPassDialog()
         if pass_dialog.exec_():
-            print('clickou ok')
             text = pass_dialog.get_text()
-            print(text)
             if text:
-                print('tem texto')
                 hide_message.apply_transformation(self, self.pixels, text)
 
     def gamma_spin_update(self, value):
