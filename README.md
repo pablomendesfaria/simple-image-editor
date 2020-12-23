@@ -20,9 +20,17 @@ delas segue abaixo.
 
 # ScreenShots:
 
-![Screenshot_1](https://user-images.githubusercontent.com/48353092/100550732-a3b62200-325a-11eb-9dd1-1eec989869a6.png)
+![Screenshot_1](https://user-images.githubusercontent.com/48353092/103041731-02b74000-4556-11eb-99b6-9d26214993a8.png)
 
-![Screenshot_3](https://user-images.githubusercontent.com/48353092/100550737-b2043e00-325a-11eb-8bb0-a5aa8784ce5d.png)
+![Screenshot_2](https://user-images.githubusercontent.com/48353092/103041762-1d89b480-4556-11eb-8bbd-92ad6f32e87a.png)
+
+![Screenshot_3](https://user-images.githubusercontent.com/48353092/103041781-2c706700-4556-11eb-80fe-d18593ac44cf.png)
+
+![Screenshot_4](https://user-images.githubusercontent.com/48353092/103041802-3abe8300-4556-11eb-825d-53a2e9351235.png)
+
+![Screenshot_5](https://user-images.githubusercontent.com/48353092/103041809-3f833700-4556-11eb-99db-9e349d2d65db.png)
+
+![Screenshot_6](https://user-images.githubusercontent.com/48353092/103041811-427e2780-4556-11eb-9011-e67306d06bb9.png)
 
 # Integrantes:
 
