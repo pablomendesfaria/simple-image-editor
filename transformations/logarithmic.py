@@ -12,7 +12,7 @@ def log_transform(parent, pixels):
     """
     c = 255/math.log(255+1, 10)
     for index, pixel in enumerate(pixels):
-        pixels[index] = (c * math.log(pixel[0] + 1, 10),
-                         c * math.log(pixel[1] + 1, 10),
-                         c * math.log(pixel[2] + 1, 10))
+        pixels[index] = (int(c * math.log(pixel[0] + 1, 10)),
+                         int(c * math.log(pixel[1] + 1, 10)),
+                         int(c * math.log(pixel[2] + 1, 10)))
     parent.set_image(pixels, has_filter=True)

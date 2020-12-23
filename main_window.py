@@ -303,6 +303,7 @@ class MainWindow(QMainWindow):
         self.action_red_scale.setEnabled(True)
         self.action_green_scale.setEnabled(True)
         self.action_blue_scale.setEnabled(True)
+        self.action_logarithmic.setEnabled(True)
 
         self.action_hide_text.setEnabled(True)
         self.action_identify_secret_text.setEnabled(True)
